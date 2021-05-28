@@ -36,7 +36,7 @@ class Fun(commands.Cog):
         """
         Take a shot at the gamble command. 
         Totally not rigged:tm:
-        If ya wanna view the source
+        If ya wanna view the source visit [here](https://github.com/drapespy/Osi)
         """
         USER_ID = ctx.message.author.id
         async with aiosqlite.connect("data/BankAccounts.db") as db:
