@@ -46,6 +46,7 @@ class Fun(commands.Cog):
             result_userID = await cur.fetchone()
         if result_userID is None:
             await ctx.send(f'{ctx.message.author.mention} please create an account using the register command')
+            return
         if result_userID:      
             wallet_balance = int(result_userID[0])
         if amount.isalpha():
@@ -150,22 +151,6 @@ class Fun(commands.Cog):
     @commands.command()
     async def spellout(self, ctx, *, msg:str):
         await ctx.send(" ".join(list(msg.upper())))
-
-    @commands.command()
-    async def table(self, ctx):
-        async with aiosqlite.connect('data/BankAccounts.db') as db:
-            cur = await db.cursor()
-            await cur.execute('SELECT * FROM Accounts')
-            result = await cur.fetchall()
-            for row in result:
-                em =  discord.Embed(
-                    description=row,
-                    color=discord.Color.random()
-                )
-                await ctx.send(embed=em)
-                # print(row)
-                # print("\n")
-            # await ctx.send('Printed result')
 
 
 def setup(osi):

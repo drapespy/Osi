@@ -43,7 +43,7 @@ class Economy(commands.Cog):
             await cur.execute(f'select user_id from Accounts where user_id="{USER_ID}"')
             result_userID = await cur.fetchone()
 
-        if result_userID is None:
+        if result_userID == None:
             if user is None:
                 await ctx.send(f'{user.mention} please create an account using the register command')
             else:
@@ -56,9 +56,11 @@ class Economy(commands.Cog):
                 result_userbal = await cur.fetchone()
                 await cur.execute(f'select wallet from Accounts where user_id="{USER_ID}"')
                 result_userwallet = await cur.fetchone()
+            com1 = '{:,}'.format(int(result_userbal[0]))
+            com2= '{:,}'.format(int(result_userwallet[0]))
             emb = discord.Embed(title=f'__{user.name}\'s Balance__')
-            emb.add_field(name='Wallet: ', value=f'{self.osi.emote} {result_userbal[0]}', inline=False)
-            emb.add_field(name='Bank: ', value=f'{self.osi.emote} {result_userwallet[0]}', inline=False)
+            emb.add_field(name='Wallet: ', value=f'{self.osi.emote} {com1}', inline=False)
+            emb.add_field(name='Bank: ', value=f'{self.osi.emote} {com2}', inline=False)
             await ctx.send(embed=emb)
 
     @commands.command(aliases=['dep'], description='Deposit credits into your bank')
@@ -90,7 +92,8 @@ class Economy(commands.Cog):
                 await db.commit()
                 await cur.execute(f'UPDATE Accounts SET balance = balance - {int(amt)} where user_id={USER_ID}')
                 await db.commit()
-            await ctx.send(f'Successfully transfered {self.osi.emote} {amt} to your bank')    
+            com = '{:,}'.format(int(amt))
+            await ctx.send(f'Successfully transfered {self.osi.emote} {com} to your bank')    
         else:
             await ctx.send(f"{ctx.message.author.mention} Please give a valid amount")    
 
@@ -124,7 +127,8 @@ class Economy(commands.Cog):
                 await db.commit()
                 await cur.execute(f'UPDATE Accounts SET balance = balance + {int(amt)} where user_id={USER_ID}')
                 await db.commit() 
-            await ctx.send(f'You have successfully withdrawn {self.osi.emote} {int(amt)}')
+            com = '{:,}'.format(int(amt))
+            await ctx.send(f'You have successfully withdrawn {self.osi.emote} {com}')
         else:
             await ctx.send(f"{ctx.message.author.mention} Please give me a valid amount")
 

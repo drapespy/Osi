@@ -59,6 +59,7 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         osi.load_extension(f"cogs.{filename[:-3]}")
 
+
 # token and others 
 keep_alive()
 osi.run(os.environ['TOKEN'])
