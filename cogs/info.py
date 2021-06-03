@@ -22,5 +22,12 @@ class Info(commands.Cog):
         em.add_field(name='__Bot Stats__',value=f'<:servercount:822526317663748106> Servers: `{server_count}`\n<:memberlist:811747305543434260> Members: `{total_members}`', inline=False)
         await ctx.send(embed=em)
 
+    @commands.command()
+    async def changelog(self,ctx):
+        embed = discord.Embed(title='Osi v1.3.1a', description='Buffed `beg` payout a tad, but added a 45% failrate.')
+        embed.set_author(name='Thu, June 3rd 2021', icon_url='https://cdn.discordapp.com/emojis/832657362912542790.gif?v=1')
+        embed.color = discord.Color.random()
+        await ctx.reply(embed=embed, mention_author=False)
+
 def setup(osi):
     osi.add_cog(Info(osi))

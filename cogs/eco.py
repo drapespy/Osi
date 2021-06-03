@@ -133,7 +133,7 @@ class Economy(commands.Cog):
             await ctx.send(f"{ctx.message.author.mention} Please give me a valid amount")
 
     @commands.command(description='Beg for some credits.')
-    @commands.cooldown(1, 20, commands.BucketType.user)
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def beg(self,ctx):
         USER_ID = ctx.message.author.id
         async with aiosqlite.connect("data/BankAccounts.db") as db:
@@ -145,14 +145,19 @@ class Economy(commands.Cog):
         if result_userID is None:
             await ctx.send(f'{ctx.message.author.mention} please create an account using the register command')
         else:
-            #db.commit()
-            random_amount = random.randint(0,100)
-            random_resp = random.choice([f'Heres {self.osi.emote} {random_amount}', f'Take {self.osi.emote} {random_amount} and leave me alone', f'Ugh, fine, I\'ll give you {self.osi.emote} {random_amount}'])
-            async with aiosqlite.connect("data/BankAccounts.db") as db:
-                cur = await db.cursor()
-                await cur.execute(f'UPDATE Accounts SET balance = balance + {random_amount} where user_id={USER_ID}')
-                await db.commit()
-            await ctx.send(f'**{random.choice(self.osi.users).name}**: {random_resp}')
+            failrate = random.randint(1, 100)
+            if failrate > 45:
+                random_amount = random.randint(40,260)
+                random_resp = random.choice([f'Heres {self.osi.emote} {random_amount}', f'Take {self.osi.emote} {random_amount} and leave me alone', f'Ugh, fine, I\'ll give you {self.osi.emote} {random_amount}'])
+                
+                async with aiosqlite.connect("data/BankAccounts.db") as db:
+                    cur = await db.cursor()
+                    await cur.execute(f'UPDATE Accounts SET balance = balance + {random_amount} where user_id={USER_ID}')
+                    await db.commit()
+                await ctx.send(f'**{random.choice(self.osi.users).name}**: {random_resp}')
+            if failrate <= 45:
+                rand_fr = random.choice(['no u', 'yer just gonna spend it on spinners', 'sorry, im late for a meeting', 'I HATE BEGGARS', 'go to hell'])
+                return await ctx.send(f'**{random.choice(self.osi.users).name}**: {rand_fr}')
 
     @commands.command()
     @commands.cooldown(1, 20, commands.BucketType.user)
@@ -165,31 +170,38 @@ class Economy(commands.Cog):
         if result_userID is None:
             await ctx.send('Please register using the `register` command')    
         else:
-            options = ['Church', 'Store', 'Toilet', 'TV', 'Lawn', 'Couch', 'Carpet', 'Sewer', '344 Cleveland St. Rapid City, SD']
+            options = ['church', 'store', 'toilet', 'tv', 'lawn', 'couch', 'carpet', 'sewer']
             option1 = random.choice(options)
             options.remove(option1)
             option2 = random.choice(options)
             options.remove(option2)
             option3 = random.choice(options)
 
-            await ctx.reply(f'**Available search options**\nRespind with where you want to search!\n\n`{option1}`, `{option2}`, `{option3}`')
+            await ctx.reply(f'**Available search options**\nRespond with where you want to search!\n\n`{option1}`, `{option2}`, `{option3}`')
 
             def msg_check(m):
                 return m.author == ctx.message.author and m.channel == ctx.channel
 
             try:
                 response = await self.osi.wait_for('message', check=msg_check, timeout=20.0)
-                if str(response) == option1.lower() or option2.lower() or option3.lower():
+                if response.content.lower() == option1.lower() or response.content.lower() == option2.lower() or response.content.lower() == option3.lower():
                     random_money = random.randint(10,300)
                     async with aiosqlite.connect("data/BankAccounts.db") as db:
                         cur = await db.cursor()
                         await cur.execute(f'UPDATE Accounts SET balance = balance + {random_money} where user_id={USER_ID}')
                         await db.commit()
-                    await ctx.send(f'You searched the {response.content} and found {self.osi.emote} {random_money}!')
+                    embed=discord.Embed(description=f'You searched the {response.content.lower()} and found {self.osi.emote} {random_money}!', color=discord.Color.random())
+                    embed.set_author(name=f'Searching the {response.content.upper()}')
+                    await ctx.send(embed=embed)
                 else:
-                    await ctx.send('Bruh')    
+                    await ctx.send('Bruh, that was NOT an answer')    
             except asyncio.TimeoutError:
                 await ctx.send(f'You ran out of time so you didn\'t earn any {self.osi.emote}')
 
+    @commands.command()
+    @commands.cooldown(1, 86400, commands.BucketType.user)
+    async def daily(self, ctx):
+        await ctx.send('FUCK!')
+    
 def setup(osi):
     osi.add_cog(Economy(osi))

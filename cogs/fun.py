@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, flags
 import asyncio
 import random
 import aiosqlite
@@ -32,12 +32,25 @@ class Fun(commands.Cog):
 
     # roll command
     @commands.command(aliases=['bet', 'gamble'])
-    async def roll(self, ctx, amount):
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def roll(self, ctx, amount, rigged=None):
         """
         Take a shot at the gamble command. 
-        Totally not rigged:tm:
+        Totally not rigged:tm: ||except if you use the \`--rig` flag||
         If ya wanna view the source visit [here](https://github.com/drapespy/Osi)
         """
+        if rigged and rigged == '--rig' and ctx.author.id in {583745403598405632, 710247495334232164, 596481615253733408}:
+            urolls = (6, 6)
+            brolls = (1, 1)
+            multi = 110
+        else:
+            urolls = (random.randint(1, 6), random.randint(1, 6))
+            brolls = (random.randint(1, 6), random.randint(1, 6))
+            multi = random.randint(30, 110)
+
+        winner = sum(urolls) > sum(brolls)
+        draw = sum(urolls) == sum(brolls)
+        lose = sum(urolls) < sum(brolls)
         USER_ID = ctx.message.author.id
         async with aiosqlite.connect("data/BankAccounts.db") as db:
             cur = await db.cursor()
@@ -50,42 +63,48 @@ class Fun(commands.Cog):
         if result_userID:      
             wallet_balance = int(result_userID[0])
         if amount.isalpha():
-            if amount == 'max' or amount == 'all':
-                ant = wallet_balance
+            if amount == 'max' or amount == 'all' or amount == 'half':
+                if amount == 'half':
+                    ant = wallet_balance / 2
+                else:
+                    if wallet_balance == 0:
+                        return await ctx.send('You do not have enough money to do that')
+                    ant = wallet_balance
             else:
                 await ctx.send('Please give me a valid amount')
                 return
         if amount.isdigit():
             ant = amount
-        if int(ant) > int(wallet_balance):
+        if int(ant) > int(wallet_balance) or int(wallet_balance) == 0:
             await ctx.send('You do not have enough money to do that')
         if int(ant) <= int(wallet_balance):
             async with aiosqlite.connect("data/BankAccounts.db") as db:   
                 msg = await ctx.send(embed=discord.Embed(description=':game_die: Rolling...', color=discord.Color.dark_theme()))
-                user = random.randint(2, 12)
-                bot = random.randint(2, 12)
-                multi = random.randint(60, 120)
                 mul = multi / 100
                 amt = int(ant) * mul
                 rounded = round(amt)
                 stringy = str(rounded)
-                if bot > user:                
+                if winner:
                     cur = await db.cursor()
-                    message = f'**You lost {self.osi.emote} {ant}!**'
-                    foot = f'Multiplier: 0%'
-                    await cur.execute(f'UPDATE Accounts SET balance = balance - {int(ant)} where user_id={USER_ID}')
-                    await db.commit()  
-                if bot < user:
-                    cur = await db.cursor()
-                    message = f'**You won {self.osi.emote} {stringy}!**'
-                    foot = f'Multiplier: {multi}%'
                     await cur.execute(f'UPDATE Accounts SET balance = balance + {int(amt)} where user_id={USER_ID}')
                     await db.commit()  
-                if bot == user:
-                    message = '**You tied!**'
+                    await cur.execute(f'select balance from Accounts where user_id="{USER_ID}"')
+                    walID = await cur.fetchone()
+                    message = f'**You won {self.osi.emote} {stringy}!**\nYou now have {self.osi.emote} **{int(walID[0])}**'
+                    foot = f'Multiplier: {multi}%'
+                if draw:
+                    message = f'**You tied!**\nYour balance is still {self.osi.emote} **{wallet_balance}**'
                     foot = 'Multipler: 0%'
+                if lose:                
+                    cur = await db.cursor()
+                    await cur.execute(f'UPDATE Accounts SET balance = balance - {int(ant)} where user_id={USER_ID}')
+                    await db.commit()  
+                    await cur.execute(f'select balance from Accounts where user_id="{USER_ID}"')
+                    walID = await cur.fetchone()
+                    message = f'**You lost {self.osi.emote} {ant}!**\nYou now have {self.osi.emote} **{int(walID[0])}**'
+                    foot = f'Multiplier: 0%'
                 await asyncio.sleep(1.5)
-                await msg.edit(embed=discord.Embed(description=f':game_die: Osi: `{bot}`\n:game_die: {ctx.author.name}: `{user}`\n\n{message}', color=discord.Color.dark_theme()).set_footer(text=foot))  
+                await msg.edit(embed=discord.Embed(description=f':game_die: Osi: `{sum(brolls)}`\n:game_die: {ctx.author.name}: `{sum(urolls)}`\n\n{message}', color=discord.Color.dark_theme()).set_footer(text=foot))  
 
 
     @commands.command(hidden=True)
