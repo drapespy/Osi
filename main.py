@@ -1,4 +1,4 @@
-import discord
+import discord 
 from discord.ext import commands, tasks
 from discord_slash import SlashCommand
 import os
@@ -9,28 +9,34 @@ import itertools
 import traceback
 from util.jsk import ExtensionConverter
 
+desc = """
+An economy bot made in discord.py
+──────────────────────────────────────────
+─██████████████─██████████████─██████████─
+─██░░░░░░░░░░██─██░░░░░░░░░░██─██░░░░░░██─
+─██░░██████░░██─██░░██████████─████░░████─
+─██░░██──██░░██─██░░██───────────██░░██───
+─██░░██──██░░██─██░░██████████───██░░██───
+─██░░██──██░░██─██░░░░░░░░░░██───██░░██───
+─██░░██──██░░██─██████████░░██───██░░██───
+─██░░██──██░░██─────────██░░██───██░░██───
+─██░░██████░░██─██████████░░██─████░░████─
+─██░░░░░░░░░░██─██░░░░░░░░░░██─██░░░░░░██─
+─██████████████─██████████████─██████████─
+──────────────────────────────────────────
+Now with spaghetti code:tm:
+"""
+
 helpcommand = Help(sort_commands=True, code_block=False, colour=discord.Colour.purple(), timeout_remove_controls=True)
-osi = commands.Bot(command_prefix=commands.when_mentioned_or('osi ', 'Osi ', 'OSi ', 'OSI ', 'OsI ', "oSI ", 'oSi ', 'osI ', 'o!', 'O!'), intents=discord.Intents.all(), case_insensitive=True, help_command=helpcommand, description='An economy bot made in discord.py')
+osi = commands.Bot(command_prefix=commands.when_mentioned_or('osi ', 'Osi ', 'OSi ', 'OSI ', 'OsI ', "oSI ", 'oSi ', 'osI ', 'o!', 'O!'), intents=discord.Intents.all(), case_insensitive=True, help_command=helpcommand, description=desc)
 osi.emote = '<a:osi:832657362912542790>' 
-osi.load_extension("jishaku")
-osi.emote = '<a:osi:832657362912542790>'
 os.environ["JISHAKU_HIDE"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 slash = SlashCommand(osi, override_type = True, sync_commands = True)
 
-@osi.event
-async def on_ready():
-    print('Osi is ready')
-    cp.start()
-
-
-# CP 😳
-@tasks.loop(minutes=5)
-async def cp():
-    await osi.change_presence(activity=discord.Game(name='osi help'))
-
-_extensions = [
+EXTENSIONS = [
+    'jishaku',
     'cogs.eco',
     'cogs.error_handler',
     'cogs.fun',
@@ -38,7 +44,24 @@ _extensions = [
     'cogs.misc',
     'cogs.shop',
     'cogs.slash'
-]
+    ]
+
+@osi.event
+async def on_ready():
+    for ext in EXTENSIONS:
+        try:
+            osi.load_extension(ext)
+            print(f"The {ext.replace('cogs.', '').replace('_', ' ').title()} cog has been loaded.")
+        except Exception as e: 
+            print(f"The {ext.replace('cogs.', '').replace('_', ' ').title()} cog has failed to load\n Error: {e}")
+    print('Osi is now ready.')
+    cp.start()
+
+
+# CP 😳
+@tasks.loop(minutes=5)
+async def cp():
+    await osi.change_presence(activity=discord.Game(name='osi help'))
 
 @osi.command(hidden=True, aliases=['reload'])
 @commands.is_owner()
@@ -71,7 +94,7 @@ async def load(ctx, *extensions: ExtensionConverter):
     for page in paginator.pages:
         await ctx.send(page)
 
-@osi.command()
+@osi.command(hidden=True)
 @commands.is_owner()
 async def unload(ctx, *extensions: ExtensionConverter):
 
@@ -94,11 +117,9 @@ async def unload(ctx, *extensions: ExtensionConverter):
     for page in paginator.pages:
         await ctx.send(page)
 
+
+# Starting the bot
 if __name__ == '__main__':
-    for ext in _extensions:
-        osi.load_extension(ext)
+    keep_alive()
+    osi.run(os.environ['TOKEN'])
 
-
-# token and others 
-keep_alive()
-osi.run(os.environ['TOKEN'])

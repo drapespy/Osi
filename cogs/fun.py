@@ -1,9 +1,11 @@
 import discord
-from discord.ext import commands, flags
+from discord.ext import commands 
 import asyncio
 import random
 import aiosqlite
 import typing
+
+rig =  ['583745403598405632', '710247495334232164', '596481615253733408', '768434609125851156']
 
 class Fun(commands.Cog):
     """
@@ -33,20 +35,26 @@ class Fun(commands.Cog):
     # roll command
     @commands.command(aliases=['bet', 'gamble'])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def roll(self, ctx, amount, rigged=None):
+    async def roll(self, ctx, amount, rigged:typing.Optional[str]):
         """
         Take a shot at the gamble command. 
         Totally not rigged:tm: ||except if you use the \`--rig` flag||
         If ya wanna view the source visit [here](https://github.com/drapespy/Osi)
         """
-        if rigged and rigged == '--rig' and ctx.author.id in {583745403598405632, 710247495334232164, 596481615253733408}:
-            urolls = (6, 6)
-            brolls = (1, 1)
-            multi = 110
-        else:
-            urolls = (random.randint(1, 6), random.randint(1, 6))
-            brolls = (random.randint(1, 6), random.randint(1, 6))
-            multi = random.randint(30, 110)
+
+        urolls = (random.randint(1, 6), random.randint(1, 6))
+        brolls = (random.randint(1, 6), random.randint(1, 6))
+        multi = random.randint(30, 110)
+
+        if rigged:
+            print('ok')
+            if rigged == ('--rig' or '--rigged') and str(ctx.author.id) in rig:
+                print('pass')
+                urolls = (6, 6)
+                brolls = (1, 1)
+                multi = 110
+            else:
+                pass
 
         winner = sum(urolls) > sum(brolls)
         draw = sum(urolls) == sum(brolls)
